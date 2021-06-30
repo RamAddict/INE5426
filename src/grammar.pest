@@ -32,9 +32,9 @@ kw_attrib = @{ "=" }
 
 kw_plus = @{ "+" }
 kw_minus = @{ "-" }
-kw_mult = @{ "mult" }
-kw_div = @{ "div" }
-kw_mod = @{ "mod" }
+kw_mult = @{ "*" }
+kw_div = @{ "/" }
+kw_mod = @{ "%" }
 
 kw_lt = @{ "<" }
 kw_gt = @{ ">" }
