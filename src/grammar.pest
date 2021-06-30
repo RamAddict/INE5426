@@ -1,5 +1,7 @@
 program = { SOI ~ (statement | funclist)? ~ EOI }
 
+// Non Trivial Terminals =======================================================
+
 ident = @{ (ASCII_ALPHA | "_") ~ (ASCII_ALPHANUMERIC | "_")* }
 
 int_constant = @{ ASCII_DIGIT+ }
@@ -13,6 +15,8 @@ s_char_sequence = @{ (s_char ~ s_char_sequence) | s_char }
 s_char = @{ (!("\"" | "\\" | NEWLINE) ~ ANY) | s_char_sequence_escape }
 
 s_char_sequence_escape = @{ "\\'" | "\\\"" | "\\?" | "\\\\'" | "\\a" | "\\b" | "\\f" | "\\n" | "\\r" | "\\t" | "\\v" }
+
+// =============================================================================
 
 funclist = {(funcdef ~ funcdef) | funcdef }
 
