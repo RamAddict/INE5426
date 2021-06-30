@@ -1,0 +1,56 @@
+program = { (statement | funclist)? }
+
+funclist = {(funcdef ~ funcdef) | funcdef }
+
+funcdef = {"def" ~ "ident(" ~ paramlist ~ "){" ~ statelist ~ "}"}
+
+paramlist = {((("int" | "float" | "string") ~ "ident," ~ paramlist) | (("int" | "float" | "string") ~ "ident"))?}
+
+statement = {
+    vardecl ~ ";" |
+    atribstat ~ ";" |
+    printstat ~ ";" |
+    readstat ~ ";" |
+    returnstat ~ ";" |
+    ifstat ~ ";" |
+    forstat ~ ";" |
+    "{" ~ statelist ~ "}" |
+    "break;" |
+    ";"
+}
+
+vardecl = {("int" | "float" | "string") ~ "ident" ~ ("[int_constant]")*}
+
+atribstat = { lvalue ~ "=" ~ (expression | allocexpression | funccall)}
+
+funccall = { "ident(" ~ paramlistcall ~ ")" }
+
+paramlistcall = { (("ident," ~ paramlistcall) | "ident")? }
+
+printstat = { "print" ~ expression }
+
+readstat = { "read" ~ lvalue }
+
+returnstat = { "return" }
+
+ifstat = { "if(" ~ expression ~ ")" ~ statement ~ ("else" ~ statement)? }
+
+forstat = { "for(" ~ atribstat ~ ";" ~ expression ~ ";" ~ atribstat ~ ")" ~ statement }
+
+statelist = { statement ~ (statelist)? }
+
+allocexpression = { "new" ~ ("int" | "float" | "string") ~ ("[" ~ numexpression ~ "]")+ }
+
+expression = { numexpression ~ (("<" | ">" | "<=" | ">=" | "==" | "!=") ~ numexpression)?}
+
+numexpression = { term ~ (("+" | "-") ~ term)* }
+
+term = { unaryexpr ~ (("*" | "/" | "%") ~ unaryexpr)* }
+
+unaryexpr = { ("+" | "-")? ~ factor }
+
+factor = { "int_constant" | "float_constant" | "string_constant" | "null" | lvalue | ("(" ~ numexpression ~ ")") }
+
+lvalue = { "ident" ~ ("[" ~ numexpression ~ "]")* }
+
+WHITESPACE = _{ " " | "\t" | "\n" }
