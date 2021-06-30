@@ -1,10 +1,25 @@
-program = { (statement | funclist)? }
+program = { SOI ~ (statement | funclist)? ~ EOI }
+
+ident = @{ (ASCII_ALPHA | "_") ~ (ASCII_ALPHANUMERIC | "_")* }
+
+int_constant = @{ ASCII_DIGIT+ }
+
+float_constant = @{ ASCII_DIGIT+ ~ ("." ~ ASCII_DIGIT+)? ~ (("e"|"E") ~ ("+"|"-")? ~ ASCII_DIGIT+)? }
+
+string_constant = ${ "\"" ~ s_char_sequence ~ "\""}
+
+s_char_sequence = @{ (s_char ~ s_char_sequence) | s_char }
+
+s_char = @{ (!("\"" | "\\" | NEWLINE) ~ ANY) | s_char_sequence_escape }
+
+s_char_sequence_escape = @{ "\\'" | "\\\"" | "\\?" | "\\\\'" | "\\a" | "\\b" | "\\f" | "\\n" | "\\r" | "\\t" | "\\v" }
 
 funclist = {(funcdef ~ funcdef) | funcdef }
 
-funcdef = {"def" ~ "ident(" ~ paramlist ~ "){" ~ statelist ~ "}"}
+//Verify concatenated characters
+funcdef = {"def" ~ ident ~ "(" ~ paramlist ~ ")" ~ "{" ~ statelist ~ "}"}
 
-paramlist = {((("int" | "float" | "string") ~ "ident," ~ paramlist) | (("int" | "float" | "string") ~ "ident"))?}
+paramlist = {((("int" | "float" | "string") ~ ident ~ "," ~ paramlist) | (("int" | "float" | "string") ~ ident))?}
 
 statement = {
     vardecl ~ ";" |
@@ -12,20 +27,20 @@ statement = {
     printstat ~ ";" |
     readstat ~ ";" |
     returnstat ~ ";" |
-    ifstat ~ ";" |
-    forstat ~ ";" |
+    ifstat|
+    forstat|
     "{" ~ statelist ~ "}" |
     "break;" |
     ";"
 }
 
-vardecl = {("int" | "float" | "string") ~ "ident" ~ ("[int_constant]")*}
+vardecl = {("int" | "float" | "string") ~ ident ~ ("[" ~ int_constant ~ "]")*}
 
-atribstat = { lvalue ~ "=" ~ (expression | allocexpression | funccall)}
+atribstat = { lvalue ~ "=" ~ (funccall | allocexpression | expression)}
 
-funccall = { "ident(" ~ paramlistcall ~ ")" }
+funccall = { ident ~ "(" ~ paramlistcall ~ ")" }
 
-paramlistcall = { (("ident," ~ paramlistcall) | "ident")? }
+paramlistcall = { ((ident ~ "," ~ paramlistcall) | ident)? }
 
 printstat = { "print" ~ expression }
 
@@ -33,15 +48,18 @@ readstat = { "read" ~ lvalue }
 
 returnstat = { "return" }
 
-ifstat = { "if(" ~ expression ~ ")" ~ statement ~ ("else" ~ statement)? }
+//Verify concatenated characters
+ifstat = { "if" ~ "(" ~ expression ~ ")" ~ statement ~ ("else" ~ statement)? }
 
-forstat = { "for(" ~ atribstat ~ ";" ~ expression ~ ";" ~ atribstat ~ ")" ~ statement }
+//Verify concatenated characters
+forstat = { "for" ~ "(" ~ atribstat ~ ";" ~ expression ~ ";" ~ atribstat ~ ")" ~ statement }
 
 statelist = { statement ~ (statelist)? }
 
 allocexpression = { "new" ~ ("int" | "float" | "string") ~ ("[" ~ numexpression ~ "]")+ }
 
-expression = { numexpression ~ (("<" | ">" | "<=" | ">=" | "==" | "!=") ~ numexpression)?}
+//Changed Order and Resolve Non Backtracking
+expression = { numexpression ~ (("<=" | ">="| "<" | ">" | "==" | "!=") ~ numexpression)? }
 
 numexpression = { term ~ (("+" | "-") ~ term)* }
 
@@ -49,8 +67,8 @@ term = { unaryexpr ~ (("*" | "/" | "%") ~ unaryexpr)* }
 
 unaryexpr = { ("+" | "-")? ~ factor }
 
-factor = { "int_constant" | "float_constant" | "string_constant" | "null" | lvalue | ("(" ~ numexpression ~ ")") }
+factor = { float_constant | int_constant | string_constant | "null" | lvalue | ("(" ~ numexpression ~ ")") }
 
-lvalue = { "ident" ~ ("[" ~ numexpression ~ "]")* }
+lvalue = { ident ~ ("[" ~ numexpression ~ "]")* }
 
-WHITESPACE = _{ " " | "\t" | "\n" }
+WHITESPACE = _{ " " | "\t" | NEWLINE }

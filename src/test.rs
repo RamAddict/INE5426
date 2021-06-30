@@ -48,6 +48,43 @@ fn test_example1() {
         }
     ";
 
-    let pairs = ParserCC20211::parse(Rule::program, test_program).unwrap();
-    println!("{}", pairs)
+    let pairs_result = ParserCC20211::parse(Rule::program, test_program);
+    match pairs_result {
+        Ok(pairs) => {
+            println!("{}", pairs)
+        }
+        Err(error) => {
+            println!("{}", error);
+            println!("{:?}", error.variant);
+            panic!()
+        }
+    }
+}
+
+#[test]
+fn test1() {
+    let string = "
+        {
+            int j;
+            int k;
+            k = 10.5;
+            j = 1e-70;
+        }
+    ";
+    let pairs = ParserCC20211::parse(Rule::program, string).expect("Error ocurred");
+    println!("{}", pairs);
+}
+
+#[test]
+fn test_float_rule() {
+    let string = "k = 10.5";
+    let pairs = ParserCC20211::parse(Rule::atribstat, string).expect("Error ocurred");
+    println!("{}", pairs);
+}
+
+#[test]
+fn test_string_rule() {
+    let string = r#""hello, \nworld!""#;
+    let pairs = ParserCC20211::parse(Rule::string_constant, string).expect("Error ocurred");
+    println!("{}", pairs);
 }
