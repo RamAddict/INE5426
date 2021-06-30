@@ -10,6 +10,7 @@ use clap::{AppSettings, Clap};
 // Import Internal Modules
 #[cfg(test)]
 mod test;
+mod symbols_table;
 // Configure Parser
 
 #[derive(Parser)]
@@ -19,7 +20,7 @@ struct ParserCC20211;
 #[derive(Clap)]
 #[clap(version = "v0.0.1")]
 #[clap(name = "S.A.P.O")]
-#[clap(about = "Sapo's A Compiler Option")]
+#[clap(about = "SAPO's A Parser Option")]
 #[clap(setting = AppSettings::ColoredHelp)]
 struct CLIOptions {
     // File to Read
