@@ -1,5 +1,47 @@
 program = { SOI ~ (statement | funclist)? ~ EOI }
 
+// Keywords List ===============================================================
+
+kw_def = @{ "def" }
+kw_break = @{ "break" }
+kw_new = @{ "new" }
+kw_for = @{ "for" }
+kw_if = @{ "if" }
+kw_else = @{ "else" }
+kw_print = @{ "print" }
+kw_read = @{ "read" }
+kw_return = @{ "return" }
+
+kw_paren_open = @{ "(" }
+kw_paren_close = @{ ")" }
+
+kw_bracket_open = @{ "[" }
+kw_bracket_close = @{ "]" }
+
+kw_cur_bracket_open = @{ "{" }
+kw_cur_bracket_close = @{ "}" }
+
+kw_int = @{ "int" }
+kw_float = @{ "float" }
+kw_string = @{ "string" }
+kw_null = @{ "null" }
+
+kw_comma = @{ "," }
+kw_semicolon = @{ ";" }
+kw_attrib = @{ "=" }
+
+kw_plus = @{ "+" }
+kw_minus = @{ "-" }
+kw_mult = @{ "mult" }
+kw_div = @{ "div" }
+kw_mod = @{ "mod" }
+
+kw_lt = @{ "<" }
+kw_gt = @{ ">" }
+kw_lte = @{ "<=" }
+kw_gte = @{ ">=" }
+kw_eq = @{ "==" }
+kw_ne = @{ "!=" }
 // Non Trivial Terminals =======================================================
 
 ident = @{ (ASCII_ALPHA | "_") ~ (ASCII_ALPHANUMERIC | "_")* }
@@ -21,58 +63,58 @@ s_char_sequence_escape = @{ "\\'" | "\\\"" | "\\?" | "\\\\'" | "\\a" | "\\b" | "
 funclist = {(funcdef ~ funcdef) | funcdef }
 
 //Verify concatenated characters
-funcdef = {"def" ~ ident ~ "(" ~ paramlist ~ ")" ~ "{" ~ statelist ~ "}"}
+funcdef = {kw_def ~ ident ~ kw_paren_open ~ paramlist ~ kw_paren_close ~ kw_cur_bracket_open ~ statelist ~ kw_cur_bracket_close }
 
-paramlist = {((("int" | "float" | "string") ~ ident ~ "," ~ paramlist) | (("int" | "float" | "string") ~ ident))?}
+paramlist = {(((kw_int | kw_float | kw_string) ~ ident ~ kw_comma ~ paramlist) | ((kw_int | kw_float | kw_string) ~ ident))?}
 
 statement = {
-    vardecl ~ ";" |
-    atribstat ~ ";" |
-    printstat ~ ";" |
-    readstat ~ ";" |
-    returnstat ~ ";" |
+    vardecl ~ kw_semicolon |
+    atribstat ~ kw_semicolon |
+    printstat ~ kw_semicolon |
+    readstat ~ kw_semicolon |
+    returnstat ~ kw_semicolon |
     ifstat|
     forstat|
-    "{" ~ statelist ~ "}" |
-    "break;" |
-    ";"
+    kw_cur_bracket_open ~ statelist ~ kw_cur_bracket_close |
+    kw_break ~ kw_semicolon |
+    kw_semicolon
 }
 
-vardecl = {("int" | "float" | "string") ~ ident ~ ("[" ~ int_constant ~ "]")*}
+vardecl = {(kw_int | kw_float | kw_string) ~ ident ~ (kw_bracket_open ~ int_constant ~ kw_bracket_close)*}
 
-atribstat = { lvalue ~ "=" ~ (funccall | allocexpression | expression)}
+atribstat = { lvalue ~ kw_attrib ~ (funccall | allocexpression | expression)}
 
-funccall = { ident ~ "(" ~ paramlistcall ~ ")" }
+funccall = { ident ~ kw_paren_open ~ paramlistcall ~ kw_paren_close }
 
-paramlistcall = { ((ident ~ "," ~ paramlistcall) | ident)? }
+paramlistcall = { ((ident ~ kw_comma ~ paramlistcall) | ident)? }
 
-printstat = { "print" ~ expression }
+printstat = { kw_print ~ expression }
 
-readstat = { "read" ~ lvalue }
+readstat = { kw_read ~ lvalue }
 
-returnstat = { "return" }
-
-//Verify concatenated characters
-ifstat = { "if" ~ "(" ~ expression ~ ")" ~ statement ~ ("else" ~ statement)? }
+returnstat = { kw_return }
 
 //Verify concatenated characters
-forstat = { "for" ~ "(" ~ atribstat ~ ";" ~ expression ~ ";" ~ atribstat ~ ")" ~ statement }
+ifstat = { kw_if ~ kw_paren_open ~ expression ~ kw_paren_close ~ statement ~ (kw_else ~ statement)? }
+
+//Verify concatenated characters
+forstat = { kw_for ~ kw_paren_open ~ atribstat ~ kw_semicolon ~ expression ~ kw_semicolon ~ atribstat ~ kw_paren_close ~ statement }
 
 statelist = { statement ~ (statelist)? }
 
-allocexpression = { "new" ~ ("int" | "float" | "string") ~ ("[" ~ numexpression ~ "]")+ }
+allocexpression = { kw_new ~ (kw_int | kw_float | kw_string) ~ (kw_bracket_open ~ numexpression ~ kw_bracket_close)+ }
 
 //Changed Order and Resolve Non Backtracking
-expression = { numexpression ~ (("<=" | ">="| "<" | ">" | "==" | "!=") ~ numexpression)? }
+expression = { numexpression ~ ((kw_lte | kw_gte | kw_lt | kw_gt | kw_eq | kw_ne) ~ numexpression)? }
 
-numexpression = { term ~ (("+" | "-") ~ term)* }
+numexpression = { term ~ ((kw_plus | kw_minus) ~ term)* }
 
-term = { unaryexpr ~ (("*" | "/" | "%") ~ unaryexpr)* }
+term = { unaryexpr ~ ((kw_mult | kw_div | kw_mod) ~ unaryexpr)* }
 
-unaryexpr = { ("+" | "-")? ~ factor }
+unaryexpr = { (kw_plus | kw_minus)? ~ factor }
 
-factor = { float_constant | int_constant | string_constant | "null" | lvalue | ("(" ~ numexpression ~ ")") }
+factor = { float_constant | int_constant | string_constant | kw_null | lvalue | (kw_paren_open ~ numexpression ~ kw_paren_close) }
 
-lvalue = { ident ~ ("[" ~ numexpression ~ "]")* }
+lvalue = { ident ~ (kw_bracket_open ~ numexpression ~ kw_bracket_close)* }
 
 WHITESPACE = _{ " " | "\t" | NEWLINE }

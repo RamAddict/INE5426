@@ -1,3 +1,4 @@
+#[cfg(test)]
 mod test;
 
 extern crate pest;
@@ -13,6 +14,6 @@ fn main() {
     println!("Hello, world!");
     let fields = ParserCC20211::parse(Rule::program, "10 + 5").unwrap();
     for field in fields {
-        println!("{}", field.as_span().as_str())
+        println!("{}", field.as_span().as_str());
     }
 }
