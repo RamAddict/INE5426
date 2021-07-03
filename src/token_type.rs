@@ -1,0 +1,43 @@
+use serde::{Serialize, Deserialize};
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+#[serde(rename_all = "snake_case")]
+pub enum TokenType {
+    KwDef,
+    KwBreak,
+    KwNew,
+    KwFor,
+    KwIf,
+    KwElse,
+    KwPrint,
+    KwRead,
+    KwReturn,
+    KwParenOpen,
+    KwParenClose,
+    KwBracketOpen,
+    KwBracketClose,
+    KwCurBracketOpen,
+    KwCurBracketClose,
+    KwInt,
+    KwFloat,
+    KwString,
+    KwNull,
+    KwComma,
+    KwSemicolon,
+    KwAttrib,
+    KwPlus,
+    KwMinus,
+    KwMult,
+    KwDiv,
+    KwMod,
+    KwLt,
+    KwGt,
+    KwLte,
+    KwGte,
+    KwEq,
+    KwNe,
+    Ident,
+    IntConstant,
+    FloatConstant,
+    StringConstant
+}

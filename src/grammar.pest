@@ -1,7 +1,4 @@
-program = { SOI ~ (statement | funclist)? ~ EOI }
-
 // Keywords List ===============================================================
-
 kw_def = @{ "def" }
 kw_break = @{ "break" }
 kw_new = @{ "new" }
@@ -48,7 +45,7 @@ ident = @{ (ASCII_ALPHA | "_") ~ (ASCII_ALPHANUMERIC | "_")* }
 
 int_constant = @{ ASCII_DIGIT+ }
 
-float_constant = @{ ASCII_DIGIT+ ~ ("." ~ ASCII_DIGIT+)? ~ (("e"|"E") ~ ("+"|"-")? ~ ASCII_DIGIT+)? }
+float_constant = @{ ASCII_DIGIT+ ~ ("." ~ ASCII_DIGIT+) ~ (("e"|"E") ~ ("+"|"-")? ~ ASCII_DIGIT+)? }
 
 string_constant = ${ "\"" ~ s_char_sequence ~ "\""}
 
@@ -58,11 +55,26 @@ s_char = @{ (!("\"" | "\\" | NEWLINE) ~ ANY) | s_char_sequence_escape }
 
 s_char_sequence_escape = @{ "\\'" | "\\\"" | "\\?" | "\\\\'" | "\\a" | "\\b" | "\\f" | "\\n" | "\\r" | "\\t" | "\\v" }
 
-// =============================================================================
+// Tokens Recognizer ===========================================================
+tokens = {
+    SOI ~ (
+        kw_def | kw_break | kw_new | kw_for | kw_if | kw_else | kw_print | kw_read | kw_return |
+        kw_paren_open | kw_paren_close | kw_bracket_open | kw_bracket_close | kw_cur_bracket_open | kw_cur_bracket_close |
+        kw_int | kw_float | kw_string | kw_null |
+        kw_comma | kw_semicolon |
+        kw_plus | kw_minus | kw_mult | kw_div | kw_mod |
+        kw_lte | kw_gte | kw_lt | kw_gt |
+        // Fix Non BackTrack
+        kw_eq | kw_ne | kw_attrib |
+        float_constant| int_constant | string_constant | ident
+    )*
+    ~ EOI
+}
+// Grammar Definition ==========================================================
+program = { SOI ~ (statement | funclist)? ~ EOI }
 
 funclist = {(funcdef ~ funcdef) | funcdef }
 
-//Verify concatenated characters
 funcdef = {kw_def ~ ident ~ kw_paren_open ~ paramlist ~ kw_paren_close ~ kw_cur_bracket_open ~ statelist ~ kw_cur_bracket_close }
 
 paramlist = {(((kw_int | kw_float | kw_string) ~ ident ~ kw_comma ~ paramlist) | ((kw_int | kw_float | kw_string) ~ ident))?}
@@ -94,17 +106,14 @@ readstat = { kw_read ~ lvalue }
 
 returnstat = { kw_return }
 
-//Verify concatenated characters
 ifstat = { kw_if ~ kw_paren_open ~ expression ~ kw_paren_close ~ statement ~ (kw_else ~ statement)? }
 
-//Verify concatenated characters
 forstat = { kw_for ~ kw_paren_open ~ atribstat ~ kw_semicolon ~ expression ~ kw_semicolon ~ atribstat ~ kw_paren_close ~ statement }
 
 statelist = { statement ~ (statelist)? }
 
 allocexpression = { kw_new ~ (kw_int | kw_float | kw_string) ~ (kw_bracket_open ~ numexpression ~ kw_bracket_close)+ }
 
-//Changed Order and Resolve Non Backtracking
 expression = { numexpression ~ ((kw_lte | kw_gte | kw_lt | kw_gt | kw_eq | kw_ne) ~ numexpression)? }
 
 numexpression = { term ~ ((kw_plus | kw_minus) ~ term)* }
@@ -116,5 +125,7 @@ unaryexpr = { (kw_plus | kw_minus)? ~ factor }
 factor = { float_constant | int_constant | string_constant | kw_null | lvalue | (kw_paren_open ~ numexpression ~ kw_paren_close) }
 
 lvalue = { ident ~ (kw_bracket_open ~ numexpression ~ kw_bracket_close)* }
+
+// Pest Specific Config
 
 WHITESPACE = _{ " " | "\t" | NEWLINE }
