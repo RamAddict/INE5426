@@ -2,6 +2,11 @@
 # SAPO's A Parser Option
 ## Compilador CC-2021-1
 
+## To build the project you should run install (if you don't have rust), then make build
+
+## If you don't have rust, run:
+    make install
+
 ## Building:
     make build
 
