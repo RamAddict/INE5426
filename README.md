@@ -2,6 +2,9 @@
 # SAPO's A Parser Option
 ## Compilador CC-2021-1
 
+## Building:
+    make build
+
 ### USAGE:
     sapo_compiler <SUBCOMMAND>
 
