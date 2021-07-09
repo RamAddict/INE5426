@@ -1,0 +1,128 @@
+{
+    "classe de abstração de vetor"
+    int size_;
+    string contents;
+    contents = new string[10000]
+    int max_size_;
+    max_size_ = 10000;
+
+    def clear(){
+        size_ = 0;
+    }
+
+    def empty(int empty) {
+        if ( size_ == 0 ) {
+            empty = 0;
+        }
+        else {
+            empty = -1;
+        }
+        return
+    }
+
+    def push_back(string data){
+        if( size_ == max_size_ ){
+            print "out of range";
+        } else {
+            contents[ size_ ] = data;
+        }
+        size_=size_+1;
+    }
+
+    def full(int full) {
+        if (size_ == max_size_) {
+            full = 1;
+        }
+        else {
+            full = -1;
+        }
+        return
+    }
+
+    def pop(int index, string rot){
+        int i;
+        if( size_ <= index ) {
+            print "out of range";
+        } else {
+            rot = contents[ index ];
+            for(i = index; i != size_ -1; i = i+1) {
+                contents[ i ] = contents[ i+1 ];
+            }
+            size_= size_-1;
+        }
+        return
+    }
+    def find(string data, int k)  {
+        int i;
+        int k;
+        k=max_size_;
+        for(i = 0; i != max_size_; i = i+1)
+        {
+            if (data == contents[ i ]) {
+                k = i;
+                break;
+            }
+        }
+        return
+    }
+
+    def size(int size)  {
+        size = size_;
+        return
+    }
+
+    def max_size(int max)  {
+        max = max_size_;
+        return
+    }
+
+    def at(int index, string item)  {
+        if (size_ <= index) {
+            print "out of range";
+        } else {
+            item = contents[ index ];
+            return
+        }
+    }
+
+    contains(string data, int contained)  {
+        contained = -1;
+        if ((find(data) == size_ ))
+        {
+
+        }
+        else {
+            contained = 1;
+        }
+        return ;
+    }
+    def pop_back() {
+    int rex;
+    rex = contents[size_ - 1];
+    pop(size_ - 1);
+    }
+
+    def pop_front() {
+        int rex = ;
+        rex = contents[0];
+        pop(0);
+        return
+    }
+
+    def remove(string data) {
+        pop(find(data));
+    }
+
+    def push_front(string data) {
+        int i;
+        if (size_ == max_size_) {
+            print "out of range";
+        } else {
+            for(i = size_; i != 0; i=i-1) {
+                contents[ i ] = contents[ i-1 ];
+            }
+            contents[0] = data;
+            size_ = size_+1;
+        }
+    }
+}

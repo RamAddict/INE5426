@@ -1,5 +1,5 @@
 {
-
+    "blum blum shub randint generator"
 def rand(int big_num) {
 
     int xnPlus1;
