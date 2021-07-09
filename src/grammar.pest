@@ -47,7 +47,7 @@ int_constant = @{ ASCII_DIGIT+ }
 
 float_constant = @{ ASCII_DIGIT+ ~ ("." ~ ASCII_DIGIT+) ~ (("e"|"E") ~ ("+"|"-")? ~ ASCII_DIGIT+)? }
 
-string_constant = ${ "\"" ~ s_char_sequence ~ "\""}
+string_constant = ${ "\"" ~ s_char_sequence? ~ "\""}
 
 s_char_sequence = @{ (s_char ~ s_char_sequence) | s_char }
 
