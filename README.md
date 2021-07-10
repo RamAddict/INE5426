@@ -7,7 +7,7 @@
 
 * the `docs/` folder contains examples that we used during development.
 * the `examples/` folder cotains the required 100 lines examples in x++ language
-* the `Relatorio/` folder contains the required report
+* the `relatorio/` folder contains the required report
 * the `src/` folder contains the code and grammar underpinning this work
 
 ## To build the project you should run install (if you don't have rust), then make build
