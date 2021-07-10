@@ -11,7 +11,9 @@
     make build
 
 ### USAGE:
-    sapo_compiler <SUBCOMMAND>
+    make run ARGS="<SUBCOMMAND>"
+### This example runs lexer on example/T1E1.lcc and shows symbols table:
+    make run ARGS="lex example/T1E1.lcc -s"
 
 ### FLAGS:
     -h, --help       Prints help information
