@@ -2,6 +2,14 @@
 # SAPO's A Parser Option
 ## Compilador CC-2021-1
 
+## File structure:
+![image](https://user-images.githubusercontent.com/32513434/125174087-42174800-e199-11eb-997b-4f174e8a6ca7.png)
+
+* the `docs/` folder contains examples that we used during development.
+* the `examples/` folder cotains the required 100 lines examples in x++ language
+* the `Relatorio/` folder contains the required report
+* the `src/` folder contains the code and grammar underpinning this work
+
 ## To build the project you should run install (if you don't have rust), then make build
 
 ## If you don't have rust, run:
