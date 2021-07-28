@@ -84,12 +84,12 @@ fn test_string_rule() {
 
 #[test]
 fn test_syntax_rule() {
-    ParserCC20211::parse(Rule::program, &fs::read_to_string("./examples/T2/T2E1.lcc").unwrap()).unwrap();
+    ParserCC20211::parse(Rule::program, &fs::read_to_string("./examples/T2/T2E1.ccc").unwrap()).unwrap();
 }
 
 #[test]
 fn test_syntax_rule2() {
-    ParserCC20211::parse(Rule::program, &fs::read_to_string("./examples/T2/T2E2.lcc").unwrap()).unwrap();
+    ParserCC20211::parse(Rule::program, &fs::read_to_string("./examples/T2/T2E2.ccc").unwrap()).unwrap();
 }
 
 #[test]
