@@ -132,7 +132,10 @@ statelist = { statement ~ statelist | statement }
 
 allocexpression = { kw_new ~ (kw_int | kw_float | kw_string) ~ (kw_bracket_open ~ numexpression ~ kw_bracket_close)+ }
 
-expression = { numexpression ~ ((kw_lte | kw_gte | kw_lt | kw_gt | kw_eq | kw_ne) ~ numexpression)? }
+expression = { 
+    (numexpression ~ ((kw_lte | kw_gte | kw_lt | kw_gt | kw_eq | kw_ne) ~ numexpression)) |
+    (numexpression)
+    }
 
 numexpression = { term ~ ((kw_plus | kw_minus) ~ term)* }
 
