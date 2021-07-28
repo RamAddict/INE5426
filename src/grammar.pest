@@ -96,7 +96,15 @@ statement = {
     kw_semicolon
 }
 
-vardecl = {(kw_int | kw_float | kw_string) ~ ident ~ (kw_bracket_open ~ int_constant ~ kw_bracket_close)*}
+vardecl = {
+    (kw_int | kw_float | kw_string) ~ ident ~ vardecl_array |
+    (kw_int | kw_float | kw_string) ~ ident
+    }
+
+vardecl_array = {
+    (kw_bracket_open ~ int_constant ~ kw_bracket_close) ~ vardecl_array |
+    (kw_bracket_open ~ int_constant ~ kw_bracket_close)    
+    }
 
 atribstat = { lvalue ~ kw_attrib ~ (funccall | allocexpression | expression)}
 
