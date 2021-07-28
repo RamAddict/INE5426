@@ -121,7 +121,10 @@ readstat = { kw_read ~ lvalue }
 
 returnstat = { kw_return }
 
-ifstat = { kw_if ~ kw_paren_open ~ expression ~ kw_paren_close ~ statement ~ (kw_else ~ statement)? }
+ifstat = { 
+    (kw_if ~ kw_paren_open ~ expression ~ kw_paren_close ~ statement ~ (kw_else ~ statement)) |
+    (kw_if ~ kw_paren_open ~ expression ~ kw_paren_close ~ statement)
+    }
 
 forstat = { kw_for ~ kw_paren_open ~ atribstat ~ kw_semicolon ~ expression ~ kw_semicolon ~ atribstat ~ kw_paren_close ~ statement }
 
