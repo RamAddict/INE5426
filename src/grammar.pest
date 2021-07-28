@@ -108,9 +108,12 @@ vardecl_array = {
 
 atribstat = { lvalue ~ kw_attrib ~ (funccall | allocexpression | expression)}
 
-funccall = { ident ~ kw_paren_open ~ paramlistcall ~ kw_paren_close }
+funccall = {
+    (ident ~ kw_paren_open ~ paramlistcall ~ kw_paren_close) | 
+    (ident ~ kw_paren_open ~ kw_paren_close) 
+    }
 
-paramlistcall = { ((ident ~ kw_comma ~ paramlistcall) | ident)? }
+paramlistcall = { ((ident ~ kw_comma ~ paramlistcall) | ident) }
 
 printstat = { kw_print ~ expression }
 

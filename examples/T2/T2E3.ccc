@@ -1,0 +1,10 @@
+def rand() {
+    print "will blow up";
+    return;
+}
+
+def callsRand() {
+    int a;
+    a = rand();
+    return;
+}

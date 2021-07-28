@@ -101,3 +101,8 @@ fn test_syntax_rule3() {
 fn test_syntax_rule4() {
     ParserCC20211::parse(Rule::program, &fs::read_to_string("./docs/exemplo2.lcc").unwrap()).unwrap();
 }
+
+#[test]
+fn test_syntax_rule5() {
+    ParserCC20211::parse(Rule::program, &fs::read_to_string("./examples/T2/T2E3.ccc").unwrap()).unwrap();
+}
