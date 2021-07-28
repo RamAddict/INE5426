@@ -46,6 +46,7 @@ ident_inner = { (ASCII_ALPHANUMERIC | "_") ~ ident_inner | (ASCII_ALPHANUMERIC |
 
 int_constant = @{ ASCII_DIGIT+ }
 
+// ask teacher if need to convert from BNF
 float_constant = @{ ASCII_DIGIT+ ~ ("." ~ ASCII_DIGIT+) ~ (("e"|"E") ~ ("+"|"-")? ~ ASCII_DIGIT+)? }
 
 string_constant = ${ "\"" ~ s_char_sequence? ~ "\""}
@@ -137,16 +138,33 @@ expression = {
     (numexpression)
     }
 
-numexpression = { term ~ ((kw_plus | kw_minus) ~ term)* }
+numexpression = { 
+    term ~ add_subtract_term |
+    term
+    }
 
-term = { unaryexpr ~ ((kw_mult | kw_div | kw_mod) ~ unaryexpr)* }
+add_subtract_term = {
+    ((kw_plus | kw_minus) ~ term) ~ add_subtract_term |
+    ((kw_plus | kw_minus) ~ term)
+}
 
-unaryexpr = { (kw_plus | kw_minus)? ~ factor }
+term = { unaryexpr ~ term_mult_div_mod | unaryexpr }
+
+term_mult_div_mod = {
+    ((kw_mult | kw_div | kw_mod) ~ unaryexpr) ~ term_mult_div_mod |
+    ((kw_mult | kw_div | kw_mod) ~ unaryexpr)
+}
+
+unaryexpr = { (kw_plus | kw_minus)  ~ factor | factor }
 
 factor = { float_constant | int_constant | string_constant | kw_null | lvalue | (kw_paren_open ~ numexpression ~ kw_paren_close) }
 
-lvalue = { ident ~ (kw_bracket_open ~ numexpression ~ kw_bracket_close)* }
+lvalue = { ident ~ lvalue_numexpression_array | ident }
 
+lvalue_numexpression_array = {
+    ((kw_bracket_open ~ numexpression ~ kw_bracket_close) ~ lvalue_numexpression_array) | 
+    (kw_bracket_open ~ numexpression ~ kw_bracket_close)
+}
 // Pest Specific Config
 
 WHITESPACE = _{ " " | "\t" | NEWLINE }
