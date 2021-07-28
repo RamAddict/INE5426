@@ -76,9 +76,12 @@ program = { SOI ~ (statement | funclist) ~ EOI  | SOI  ~ EOI }
 
 funclist = {(funcdef ~ funclist) | funcdef }
 
-funcdef = {kw_def ~ ident ~ kw_paren_open ~ paramlist ~ kw_paren_close ~ kw_cur_bracket_open ~ statelist ~ kw_cur_bracket_close }
+funcdef = {
+    (kw_def ~ ident ~ kw_paren_open ~ paramlist ~ kw_paren_close ~ kw_cur_bracket_open ~ statelist ~ kw_cur_bracket_close) | 
+    (kw_def ~ ident ~ kw_paren_open ~ kw_paren_close ~ kw_cur_bracket_open ~ statelist ~ kw_cur_bracket_close)
+}
 
-paramlist = {(((kw_int | kw_float | kw_string) ~ ident ~ kw_comma ~ paramlist) | ((kw_int | kw_float | kw_string) ~ ident))?}
+paramlist = {(((kw_int | kw_float | kw_string) ~ ident ~ kw_comma ~ paramlist) | ((kw_int | kw_float | kw_string) ~ ident))}
 
 statement = {
     vardecl ~ kw_semicolon |
