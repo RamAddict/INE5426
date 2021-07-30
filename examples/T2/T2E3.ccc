@@ -6,5 +6,7 @@ def rand() {
 def callsRand() {
     int a;
     a = rand();
+    int b;
+    b = new int[2][2];
     return;
 }

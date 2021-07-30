@@ -131,7 +131,7 @@ forstat = { kw_for ~ kw_paren_open ~ atribstat ~ kw_semicolon ~ expression ~ kw_
 
 statelist = { statement ~ statelist | statement }
 
-allocexpression = { kw_new ~ (kw_int | kw_float | kw_string) ~ (kw_bracket_open ~ numexpression ~ kw_bracket_close)+ }
+allocexpression = { kw_new ~ (kw_int | kw_float | kw_string) ~ numexpression_array }
 
 expression = { 
     (numexpression ~ ((kw_lte | kw_gte | kw_lt | kw_gt | kw_eq | kw_ne) ~ numexpression)) |
@@ -159,10 +159,10 @@ unaryexpr = { (kw_plus | kw_minus)  ~ factor | factor }
 
 factor = { float_constant | int_constant | string_constant | kw_null | lvalue | (kw_paren_open ~ numexpression ~ kw_paren_close) }
 
-lvalue = { ident ~ lvalue_numexpression_array | ident }
+lvalue = { ident ~ numexpression_array | ident }
 
-lvalue_numexpression_array = {
-    ((kw_bracket_open ~ numexpression ~ kw_bracket_close) ~ lvalue_numexpression_array) | 
+numexpression_array = {
+    ((kw_bracket_open ~ numexpression ~ kw_bracket_close) ~ numexpression_array) | 
     (kw_bracket_open ~ numexpression ~ kw_bracket_close)
 }
 // Pest Specific Config
