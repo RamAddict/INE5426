@@ -41,7 +41,10 @@ kw_eq = @{ "==" }
 kw_ne = @{ "!=" }
 // Non Trivial Terminals =======================================================
 
-ident = @{ (ASCII_ALPHA | "_") ~ ident_inner | (ASCII_ALPHA | "_") }
+ident = @{!keywords ~ (ASCII_ALPHA | "_") ~ ident_inner | (ASCII_ALPHA | "_")}
+
+keywords = @{kw_def | kw_break | kw_new | kw_for | kw_if | kw_else | kw_print | kw_read | kw_return}
+
 ident_inner = { (ASCII_ALPHANUMERIC | "_") ~ ident_inner | (ASCII_ALPHANUMERIC | "_") }
 
 int_constant = @{ ASCII_DIGIT+ }
