@@ -1,12 +1,111 @@
-def rand() {
-    print "will blow up";
+def rand(int seed, int range) {
+ 
+    seed = ((seed * seed)+seed)/2 % range;
+    return;
+}
+
+def matmul(int a, int b, int n, int m, int p) {
+    int c;
+    c = new int[n][p];
+
+    for (i = 0; i != n; i=i+1) {
+        for (j = 0; j != p; j=j+1) {
+            int sum;
+            sum = 0;
+            for (k = 0; k != m; k=k+1) {
+                sum =  sum + a[i][k] + b[k][j];
+            }
+            c[i][j] = sum;
+        }
+    }
+    
+    return;
+}
+
+def matsum(int a, int b, int c, int d) {
+
+    int x;
+    x = new int[c][d];
+
+    if (c != d) {
+        print "unable to sum these matrixes";
+    }
+    int i;
+    int j;
+    for (i = 0; i != c; i=i+1) {
+        for (j = 0; j != d; j=j+1) {
+            x[i][j] = b[i][j] + a[i][j];
+        }
+    }
+
+    return;
+}
+
+def produceIdentity(int a) {
+    int c;
+    c = new int[a][a];
+    int i;
+    for (i = 0; i != c; i=i+1) {
+        c[i][i] = 1;
+    }
+
+    return;
+}
+
+def testFunctions(int a, int size) {
+    int identity;
+    identity = produceIdentity(size);
+    int mul;
+    mul = matmul(identity, a);
+    
+    int i;
+    int j;
+    for (i = 0; i != size; i=i+1) {
+        for (j = 0; j != size; j=j+1) {
+            if (mul[i][j] != a[i][j]) {
+                print "something is wrong";
+                return;
+            }
+        }
+    }
     return;
 }
 
 def callsRand() {
-    int a;
-    a = rand();
+    int a0;
+    int a1;
+    int a2;
+    int a3;
+    int a4;
+    int a5;
+    int a6;
+    int a7;
+    a0 = 122643251;
+    a1 = 1262341;
+    a2 = 12360918;
+    a3 = 70912982;
+    a4 = 8236578236;
+    a5 = 4812;
+    a6 = 2092148;
+    a7 = 892375;
     int b;
+    int c;
     b = new int[2][2];
+    c = new int[2][2];
+    b[0][0] = rand(a0);
+    b[0][1] = rand(a1);
+    b[1][0] = rand(a2);
+    b[1][1] = rand(a3);
+    c[0][0] = rand(a4);
+    c[0][1] = rand(a5);
+    c[1][0] = rand(a6);
+    c[1][1] = rand(a7);
+    int size;
+    size = 2;
+    a = matmul(b, c, size, size, size);
+    a = matsum(b, c, size, size);
+    
+    v = STATEMENTtestFunctions(a, size);
+    
     return;
 }
