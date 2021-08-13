@@ -38,7 +38,12 @@ enum CLISubcommands {
     #[clap(name = "lex")]
     #[clap(about = "Do a lexical analysis using the CC20211 lang")]
     #[clap(setting = AppSettings::ColoredHelp)]
-    Lexer(CLICommandLexer)
+    Lexer(CLICommandLexer),
+    #[clap(version = "v0.0.1")]
+    #[clap(name = "syntax")]
+    #[clap(about = "Do a syntax analysis using the CC20211 lang")]
+    #[clap(setting = AppSettings::ColoredHelp)]
+    Syntax(CLICommandSyntax)
 }
 
 #[derive(Clap)]
@@ -52,6 +57,16 @@ struct CLICommandLexer {
     #[clap(short = 't', long = "tokens", about = "Display the tokens list")]
     show_tokens: bool,
     #[clap(short = 'i', long = "info", about = "Prints parsing information", parse(try_from_str), default_value = "true")]
+    show_info: bool
+}
+
+#[derive(Clap)]
+struct CLICommandSyntax {
+    // File to Read
+    #[clap(about = "The file to be read and parsed. Example: ./example_file.lcc")]
+    input: String,
+    // Options
+    #[clap(short = 'i', long = "info", about = "Prints syntax information", parse(try_from_str), default_value = "true")]
     show_info: bool
 }
 // Define Helpers
@@ -124,6 +139,34 @@ fn main() {
                     }
                 }
                 Err(error) => {
+                    println!("{}", error);
+                }
+            }
+        }
+        CLISubcommands::Syntax(syntax_options) => {
+            // Read File
+            let file_content = read_file_content(syntax_options.input.as_str())
+                .expect("Ops. Something occured while reading your file");
+            // Try Parse Program
+            let parsing_timing = Instant::now();
+            match ParserCC20211::parse(Rule::program, &file_content) {
+                Ok(_pairs) => {
+                    // Success Parsed
+                    let elapsed_time = parsing_timing.elapsed();
+                    // Print Info Based on Options
+                    if syntax_options.show_info {
+                        let mut info_table = Table::new();
+                        info_table
+                            .apply_modifier(UTF8_FULL)
+                            .set_content_arrangement(comfy_table::ContentArrangement::Dynamic)
+                            .set_header(vec![Cell::new("Statistics").fg(Color::Yellow).add_attribute(Attribute::Bold), Cell::new("")])
+                            .add_row(vec![Cell::new("Status").add_attribute(Attribute::Bold), Cell::new("Success").fg(Color::Green).add_attribute(Attribute::Bold).set_alignment(CellAlignment::Center)])
+                            .add_row(vec![Cell::new("Elapsed Time:"), Cell::new(format!("{:.3}s", elapsed_time.as_secs_f64())).set_alignment(CellAlignment::Right)]);
+                        println!("{}", info_table);
+                    }
+                }
+                Err(error) => {
+                    // println!("{:?}", error);
                     println!("{}", error);
                 }
             }
