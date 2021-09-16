@@ -16,6 +16,9 @@ mod test;
 mod token_type;
 mod token_list;
 mod symbols_table;
+mod consumer;
+mod ast;
+mod ir;
 // Configure Parser
 
 #[derive(Parser)]
@@ -67,6 +70,16 @@ struct CLICommandSyntax {
     input: String,
     // Options
     #[clap(short = 'i', long = "info", about = "Prints syntax information", parse(try_from_str), default_value = "true")]
+    show_info: bool
+}
+
+#[derive(Clap)]
+struct CLICommandSemantic {
+    // File to Read
+    #[clap(about = "The file to be read and parsed. Example: ./example_file.lcc")]
+    input: String,
+    // Options
+    #[clap(short = 'i', long = "info", about = "Prints semantic information", parse(try_from_str), default_value = "true")]
     show_info: bool
 }
 // Define Helpers

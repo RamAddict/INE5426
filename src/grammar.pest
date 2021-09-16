@@ -76,6 +76,8 @@ tokens = {
     ~ EOI
 }
 // Grammar Definition ==========================================================
+class_type = { kw_int | kw_float | kw_string }
+
 program = { SOI ~ (statement | funclist) ~ EOI  | SOI  ~ EOI }
 
 funclist = {(funcdef ~ funclist) | funcdef }
@@ -85,7 +87,7 @@ funcdef = {
     (kw_def ~ ident ~ kw_paren_open ~ kw_paren_close ~ kw_cur_bracket_open ~ statelist ~ kw_cur_bracket_close)
 }
 
-paramlist = {(((kw_int | kw_float | kw_string) ~ ident ~ kw_comma ~ paramlist) | ((kw_int | kw_float | kw_string) ~ ident))}
+paramlist = {((class_type ~ ident ~ kw_comma ~ paramlist) | ((kw_int | kw_float | kw_string) ~ ident))}
 
 statement = {
     vardecl ~ kw_semicolon |
@@ -100,9 +102,11 @@ statement = {
     kw_semicolon
 }
 
+gp_type = { kw_int | kw_float | kw_string }
+
 vardecl = {
-    (kw_int | kw_float | kw_string) ~ ident ~ vardecl_array |
-    (kw_int | kw_float | kw_string) ~ ident
+    (gp_type) ~ ident ~ vardecl_array |
+    (gp_type) ~ ident
     }
 
 vardecl_array = {
@@ -136,26 +140,32 @@ statelist = { statement ~ statelist | statement }
 
 allocexpression = { kw_new ~ (kw_int | kw_float | kw_string) ~ numexpression_array }
 
+rel_op = { kw_lte | kw_gte | kw_lt | kw_gt | kw_eq | kw_ne }
+
 expression = { 
-    (numexpression ~ ((kw_lte | kw_gte | kw_lt | kw_gt | kw_eq | kw_ne) ~ numexpression)) |
+    (numexpression ~ (rel_op ~ numexpression)) |
     (numexpression)
-    }
+}
 
 numexpression = { 
     term ~ add_subtract_term |
     term
-    }
+}
+
+sum_sub_op = { kw_plus | kw_minus }
 
 add_subtract_term = {
-    ((kw_plus | kw_minus) ~ term) ~ add_subtract_term |
-    ((kw_plus | kw_minus) ~ term)
+    ((sum_sub_op) ~ term) ~ add_subtract_term |
+    ((sum_sub_op) ~ term)
 }
 
 term = { unaryexpr ~ term_mult_div_mod | unaryexpr }
 
+mult_div_mod_op = { kw_mult | kw_div | kw_mod }
+
 term_mult_div_mod = {
-    ((kw_mult | kw_div | kw_mod) ~ unaryexpr) ~ term_mult_div_mod |
-    ((kw_mult | kw_div | kw_mod) ~ unaryexpr)
+    ((mult_div_mod_op) ~ unaryexpr) ~ term_mult_div_mod |
+    ((mult_div_mod_op) ~ unaryexpr)
 }
 
 unaryexpr = { (kw_plus | kw_minus)  ~ factor | factor }
