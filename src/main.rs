@@ -18,6 +18,7 @@ mod token_list;
 mod symbols_table;
 mod consumer;
 mod ast;
+mod stb;
 mod ir;
 // Configure Parser
 

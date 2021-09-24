@@ -1,369 +1,260 @@
+use std::cell::RefCell;
+use std::rc::Rc;
+
 // Import Dependencies
-use crate::ast::*;
-use crate::ParserCC20211;
+// use crate::ast::*;
+// use crate::ParserCC20211;
+// use crate::Rule;
 use pest::error::ErrorVariant;
-use pest_consume;
-use pest_consume::match_nodes;
 use pest_consume::Error;
 use pest_consume::Parser;
-// use crate::Rule;
+use ptree::TreeBuilder;
+use ptree::print_tree;
+
+// use crate::ast::ASTNode;
+use crate::ast::ASTNodeValue;
+use crate::ast::BlockStatement;
+use crate::ast::BreakStatement;
+use crate::ast::Class;
+use crate::ast::Identifier;
+use crate::ast::InnerClass;
+use crate::ast::PrintStatement;
+use crate::ast::Program;
+use crate::ast::ReturnStatement;
+use crate::ast::Statement;
+use crate::ast::VariableDeclaration;
+use crate::ast::gen_ptree_ast;
+use crate::stb::Symbol;
+use crate::stb::SymbolAttributes;
+use crate::stb::SymbolTableManager;
 // Define Types
+#[allow(dead_code)]
 type Result<T> = std::result::Result<T, Error<Rule>>;
-type Node<'i> = pest_consume::Node<'i, Rule, ()>;
+#[allow(dead_code)]
+type Node<'i> = pest_consume::Node<'i, Rule, Rc<RefCell<SymbolTableManager>>>;
 // Define Structs
 #[derive(Parser)]
 #[grammar = "grammar.pest"]
-struct ParserCC20211A {}
-// Define Consumer
+struct ParserCC20211A;
+// // Define Consumer
 #[pest_consume::parser]
 impl ParserCC20211A {
     fn EOI(_input: Node) -> Result<()> {
         Ok(())
     }
 
-    fn rel_op(input: Node) -> Result<OpRel> {
-        match input.as_str() {
-            ">" => Ok(OpRel::Gt),
-            ">=" => Ok(OpRel::Gte),
-            "<" => Ok(OpRel::Lt),
-            "<=" => Ok(OpRel::Lte),
-            "==" => Ok(OpRel::Eq),
-            "!=" => Ok(OpRel::Ne),
-            _ => Err(Error::new_from_span(
-                ErrorVariant::CustomError {
-                    message: "Invalid OpRel".to_owned(),
-                },
-                input.as_span(),
-            )),
-        }
+    fn program(input: Node) -> Result<ASTNodeValue> {
+        // Parse Children
+        let mut children = input.children();
+        let child = children.next().unwrap();
+        // Create Parent Node
+        let ast = ASTNodeValue::Program(Program(
+            // Parse Block
+            match child.as_rule() {
+                Rule::statement => {
+                    input.user_data().borrow_mut().descend_scope();
+                    let parsed = Self::statement(child)?;
+                    input.user_data().borrow_mut().ascend_scope();
+                    BlockStatement(vec![parsed])
+                }
+                // Rule::funclist
+                _ => {
+                    return Err(Error::new_from_span(
+                        ErrorVariant::CustomError {
+                            message: "Invalid Token".to_string(),
+                        },
+                        child.as_span(),
+                    ))
+                }
+            },
+        ));
+        return Ok(ast);
     }
 
-    // fn expression(input: Node) -> Result<Expression> {
-    //     Ok(match_nodes!(input.children();
-    //         [numexpression(l_exp)] => Expression(l_exp, None),
-    //         [numexpression(l_exp), rel_op(op), numexpression(r_exp)] => Expression(l_exp, Some((op, r_exp)))
-    //     ))
-    // }
-
-    fn int_constant(input: Node) -> Result<LiteralInteger> {
-        Ok(LiteralInteger {
-            value: isize::from_str_radix(input.as_str(), 10).unwrap(),
-            span: input.as_span(),
-        })
-    }
-
-    fn float_constant(input: Node) -> Result<LiteralFloat> {
-        Ok(LiteralFloat {
-            value: input.as_str().parse().map_err(|_| {
-                Error::new_from_span(
-                    ErrorVariant::CustomError {
-                        message: "Invalid value while parsing".to_owned(),
-                    },
-                    input.as_span(),
-                )
-            })?,
-            span: input.as_span(),
-        })
-    }
-
-    fn string_constant(input: Node) -> Result<LiteralString> {
-        Ok(LiteralString {
-            value: input.children().next().unwrap().as_str().to_owned(),
-            span: input.as_span(),
-        })
-    }
-
-    fn kw_bracket_open(input: Node) -> Result<()> {
-        Ok(())
-    }
-    fn kw_bracket_close(input: Node) -> Result<()> {
-        Ok(())
-    }
-    fn kw_paren_open(input: Node) -> Result<()> {
-        Ok(())
-    }
-    fn kw_paren_close(input: Node) -> Result<()> {
-        Ok(())
-    }
-
-    fn vardecl_array(input: Node) -> Result<Vec<usize>> {
-        Ok(match_nodes!(input.children();
-            [kw_bracket_open(_), int_constant(size), kw_bracket_close(_)] => vec![size.value as usize],
-            [kw_bracket_open(_), int_constant(size), kw_bracket_close(_), vardecl_array(mut vec_sizings)] => {
-                vec_sizings.insert(0, size.value as usize);
-                vec_sizings
+    fn statement(input: Node) -> Result<Statement> {
+        let fst_child = input.children().next().unwrap();
+        let ast = match fst_child.as_rule() {
+            Rule::vardecl => {
+                let parsed = Self::vardecl(fst_child)?;
+                Statement::VariableDeclaration(parsed)
+            },
+            Rule::kw_cur_bracket_open => {
+                // Block Statement
+                let parsed = Self::statelist(input.children().nth(1).unwrap())?;
+                Statement::Block(parsed)
+            },
+            Rule::returnstat => Statement::Return(ReturnStatement),
+            // TODO: Check Break inside FOR Statement
+            Rule::kw_break => Statement::Break(BreakStatement),
+            Rule::atribstat => {
+                let parsed = Self::atribstat(fast_child)?;
+                Statement::
             }
-        ))
-    }
-
-    fn kw_int(input: Node) -> Result<InnerClass> {
-        Ok(InnerClass::Integer)
-    }
-    fn kw_float(input: Node) -> Result<InnerClass> {
-        Ok(InnerClass::Float)
-    }
-    fn kw_string(input: Node) -> Result<InnerClass> {
-        Ok(InnerClass::String)
-    }
-    fn kw_null(input: Node) -> Result<LiteralNull> {
-        Ok(LiteralNull {
-            span: input.as_span(),
-        })
+            _ => {
+                return Err(Error::new_from_span(
+                    ErrorVariant::CustomError {
+                        message: "Invalid Token".to_string(),
+                    },
+                    fst_child.as_span(),
+                ))
+            }
+        };
+        return Ok(ast);
     }
 
     fn gp_type(input: Node) -> Result<InnerClass> {
-        Ok(match_nodes!(input.children();
-            [kw_int(node)] => node,
-            [kw_float(node)] => node,
-            [kw_string(node)] => node
-        ))
-    }
-
-    fn vardecl(input: Node) -> Result<VarDeclaration> {
-        let mut children = input.children();
-        let var_type = Self::gp_type(children.next().unwrap())?;
-        let identifier_node = children.next().unwrap();
-
-        let identifier = Identifier {
-            name: identifier_node.as_str().to_owned(),
-            span: identifier_node.as_span(),
-            class: match children.next() {
-                Some(vardecl_array) => Class::Array(var_type, Self::vardecl_array(vardecl_array)?),
-                None => Class::Simple(var_type),
-            },
-        };
-
-        Ok(VarDeclaration {
-            id: identifier,
-            span: input.as_span(),
+        Ok(match input.children().single()?.as_rule() {
+            Rule::kw_int => InnerClass::Integer,
+            Rule::kw_float => InnerClass::Float,
+            Rule::kw_string => InnerClass::String,
+            _ => return Err(gen_err_invalid_token(&input))
         })
     }
 
     fn ident(input: Node) -> Result<Identifier> {
-        Ok(Identifier {
-            name: input.as_str().to_owned(),
-            class: Class::Undefined,
-            span: input.as_span(),
-        })
+        Ok(Identifier(input.as_str().to_string()))
     }
 
-    fn kw_plus(input: Node) -> Result<OpSumSub> {
-        Ok(OpSumSub::Sum)
-    }
-    fn kw_minus(input: Node) -> Result<OpSumSub> {
-        Ok(OpSumSub::Sub)
-    }
-    fn kw_mult(input: Node) -> Result<OpMultDivMod> {
-        Ok(OpMultDivMod::Mult)
-    }
-    fn kw_div(input: Node) -> Result<OpMultDivMod> {
-        Ok(OpMultDivMod::Div)
-    }
-    fn kw_mod(input: Node) -> Result<OpMultDivMod> {
-        Ok(OpMultDivMod::Mod)
-    }
-    fn sum_sub_op(input: Node) -> Result<OpSumSub> {
-        Ok(match_nodes!(input.into_children();
-            [kw_plus(op)] => op,
-            [kw_minus(op)] => op
-        ))
-    }
-    fn mult_div_mod_op(input: Node) -> Result<OpMultDivMod> {
-        Ok(match_nodes!(input.into_children();
-            [kw_mult(op)] => op,
-            [kw_div(op)] => op,
-            [kw_mod(op)] => op
-        ))
+    fn vardecl_array(input: Node) -> Result<Vec<usize>> {
+        let mut children = input.children();
+        let parsed_value = usize::from_str_radix(children.nth(1).unwrap().as_str(), 10).unwrap();
+        if let Some(tail) = children.nth(3) {
+            let mut index_list = Self::vardecl_array(tail)?;
+            index_list.insert(0, parsed_value);
+            Ok(index_list)
+        } else {
+            Ok(vec![parsed_value])
+        }
     }
 
-    fn unaryexpr(input: Node) -> Result<UnaryExpression> {
-        Ok(
-            match_nodes!(input.children();
-                [kw_plus(kp), factor(factor)] => UnaryExpression {
-                    factor: factor,
-                    op: Some(kp),
-                    span: input.as_span(),
-                },
-                [kw_minus(kp), factor(factor)] => UnaryExpression {
-                    factor: factor,
-                    op: Some(kp),
-                    span: input.as_span(),
-                },
-                [factor(factor)] => UnaryExpression {
-                    factor: factor,
-                    op: None,
-                    span: input.as_span(),
+    fn vardecl(input: Node) -> Result<VariableDeclaration> {
+        let mut children = input.children();
+        // Parse Data
+        let inner_class = Self::gp_type(children.next().unwrap())?;
+        let identifier = Self::ident(children.next().unwrap())?;
+        let vd_array = children.next();
+        let class = match vd_array {
+            Some(array_node) => Class::Array(inner_class, Self::vardecl_array(array_node)?),
+            None => Class::Simple(inner_class)
+        };
+        // Insert Into Symbol Table
+        let mut symbol_table = input.user_data().borrow_mut();
+        match symbol_table.add_new_symbol(Symbol {
+            lexeme: identifier.0.clone(),
+            attributes: SymbolAttributes::Identifier(class.clone())
+        }) {
+            Ok(_) => {
+                Ok(VariableDeclaration(identifier, class))
+            },
+            Err(error) => Err(gen_err(&input, error))
+        }
+    }
+
+    fn statelist(input: Node) -> Result<BlockStatement> {
+        let mut children = input.children();
+        // let mut symbol_table = input.user_data().borrow_mut();
+        // Descend Scope
+        {
+            input.user_data().borrow_mut().descend_scope();
+        }
+        // Process Statement
+        let stmt = Self::statement(children.next().unwrap())?;
+        // Process Next Statements
+        let mut stmts = vec![stmt];
+        if let Some(tail) = children.next() {
+            let mut current_tail = tail;
+            loop {
+                // Get Tail Statement
+                let mut current_tail_children = current_tail.children();
+                let new_stmt = Self::statement(current_tail_children.next().unwrap())?;
+                stmts.push(new_stmt);
+                // Check New Tail
+                if let Some(new_tail) = current_tail_children.next() {
+                    current_tail = new_tail
+                } else {
+                    break
                 }
-            )
-        )
+            }
+        }
+        // Ascend Scope
+        {
+            input.user_data().borrow_mut().ascend_scope();
+        }
+        // Return Values
+        Ok(BlockStatement(stmts))
     }
+}
 
-    fn add_subtract_term(input: Node) -> Result<SumSubTerm> {
-        Ok(match_nodes!(input.children();
-            [sum_sub_op(op), term(term), add_subtract_term(chain)] => SumSubTerm {
-                op: op,
-                term: term,
-                chain: Some(Box::from(chain)),
-                span: input.as_span()
-            },
-            [sum_sub_op(op), term(term)] => SumSubTerm {
-                op: op,
-                term: term,
-                chain: None,
-                span: input.as_span()
-            },
-        ))
-    }
-
-    fn term_mult_div_mod(input: Node) -> Result<MultDivModTerm> {
-        Ok(match_nodes!(input.children();
-            [mult_div_mod_op(op), unaryexpr(uexp), term_mult_div_mod(chain)] => MultDivModTerm {
-                op: op,
-                unary_exp: uexp,
-                chain: Some(Box::from(chain)),
-                span: input.as_span()
-            },
-            [mult_div_mod_op(op), unaryexpr(uexp)] => MultDivModTerm {
-                op: op,
-                unary_exp: uexp,
-                chain: None,
-                span: input.as_span()
-            },
-        ))
-    }
-
-    fn term(input: Node) -> Result<Term> {
-        Ok(
-            match_nodes!(input.children();
-                [unaryexpr(unaryexpr)] => Term {
-                    unary_exp: unaryexpr,
-                    span: input.as_span(),
-                    mult_div_mod_term: None
-                },
-                [unaryexpr(unaryexpr), term_mult_div_mod(multdivmod_term)] => Term {
-                    unary_exp: unaryexpr,
-                    span: input.as_span(),
-                    mult_div_mod_term: Some(multdivmod_term),
-                }
-            )
-        )
-    }
-
-    fn numexpression(input: Node) -> Result<NumericExpression> {
-        Ok(
-            match_nodes!(input.children();
-                [term(term_val)] => NumericExpression {
-                    value: term_val,
-                    span: input.as_span(),
-                    sum_sub_term: None
-                },
-                [term(term_val), add_subtract_term(sumsub_term)] => NumericExpression {
-                    value: term_val,
-                    span: input.as_span(),
-                    sum_sub_term: Some(sumsub_term)
-                }
-            )
-        )
-    }
-
-    fn numexpression_array(input: Node) -> Result<Vec<NumericExpression>> {
-        Ok(
-            match_nodes!(input.children();
-                [kw_bracket_open(_), numexpression(num_exp), kw_bracket_close(_), numexpression_array(mut num_exp_array)] => {
-                    num_exp_array.insert(0, num_exp);
-                    num_exp_array
-                },
-                [kw_bracket_open(_), numexpression(num_exp), kw_bracket_close(_)] => vec![num_exp]
-            )
-        )
-    }
-
-    fn lvalue(input: Node) -> Result<LValue> {
-        Ok(match_nodes!(input.children();
-            [ident(id), numexpression_array(num_exp_array)] => LValue { id, array_exp: Some(num_exp_array), span: input.as_span() },
-            [ident(id)] => LValue { id, array_exp: None, span: input.as_span() },
-        ))
-    }
-
-    fn factor(input: Node) -> Result<Factor> {
-        Ok(match_nodes!(input.children();
-            [float_constant(lit_val)] => Factor { value: FactorValue::LitFloat(lit_val), span: input.as_span() },
-            [int_constant(lit_val)] => Factor { value: FactorValue::LitInt(lit_val), span: input.as_span() },
-            [string_constant(lit_val)] => Factor { value: FactorValue::LitStr(lit_val), span: input.as_span() },
-            [kw_null(lit_val)] => Factor { value: FactorValue::LitNull(lit_val), span: input.as_span() },
-            [lvalue(val)] => Factor { value: FactorValue::LitValue(val), span: input.as_span() },
-            [kw_paren_open(_), numexpression(num_exp), kw_paren_close(_)] => Factor { value: FactorValue::LitNumExp(Box::from(num_exp)) , span: input.as_span() }
-        ))
-    }
-
-    fn expression(input: Node) -> Result<Expression> {
-        Ok(match_nodes!(input.children();
-            [numexpression(num_exp), rel_op(op), numexpression(num_exp_rel)] => Expression { num_exp: num_exp, rel: Some((op, num_exp_rel)), span: input.as_span() },
-            [numexpression(num_exp)] => Expression { num_exp: num_exp, rel: None, span: input.as_span() },
-        ))
-    }
-
-    // fn returnstat(input: Node) -> Result<KWord> {
-    //     match input.as_str() {
-    //         "return" => KWord::retur,
-    //         "read" => KWord::read,
-    //         "print" => KWord::print
-    //         }
-    // }
-
-    // fn printstat(input: Node) -> Result<PrintStat> {
-    //     Ok(
-    //         match_nodes!(input.children();
-    //             [kw_print(node1), Expression(node2)] => PrintStat(node2, None)
-    //         )
-    //     )
-    // }
-
-    // fn readstat(input: Node) -> Result<ReadStat> {
-    //     Ok(
-    //         match_nodes!(input.children();
-    //             [kw_Read(node1), Expression(node2)] => ReadStat(node2, None)
-    //         )
-    //     )
-    // }
-    // fn returnstat(input: Node) -> Result<ReturnStat> {
-    //     Ok(
-    //         match_nodes!(input.children();
-    //             [kw_return(node1), Expression(node2)] => ReturnStat(node2, None)
-    //         )
-    //     )
-    // }
+#[allow(dead_code)]
+fn gen_err_invalid_token(input: &Node) -> pest::error::Error<Rule> {
+    Error::new_from_span(
+        ErrorVariant::CustomError {
+            message: "Invalid Token".to_string(),
+        },
+        input.as_span(),
+    )
+}
+#[allow(dead_code)]
+fn gen_err(input: &Node, error: crate::stb::Error) -> pest::error::Error<Rule> {
+    Error::new_from_span(
+        ErrorVariant::CustomError {
+            message: format!("{:?}", error),
+        },
+        input.as_span(),
+    )
 }
 
 #[test]
 fn test_syntax_vardecl_array() {
-    let parsed = ParserCC20211A::parse(Rule::vardecl, "int zuleide[2][3]").unwrap();
-    println!("{}", parsed);
-    let ast = ParserCC20211A::vardecl(parsed.single().unwrap()).unwrap();
-    println!("{:?}", ast)
-}
-
-#[test]
-fn test_syntax_factor_float() {
-    let parsed = ParserCC20211A::parse(Rule::factor, "1.66").unwrap();
-    println!("{}", parsed);
-    let ast = ParserCC20211A::factor(parsed.single().unwrap()).unwrap();
-    println!("{:?}", ast)
-}
-
-#[test]
-fn test_syntax_factor_array() {
-    let parsed = ParserCC20211A::parse(Rule::factor, "inpp[22]").unwrap();
+    let symbol_table = Rc::new(RefCell::new(SymbolTableManager::new()));
+    let parsed = ParserCC20211A::parse_with_userdata(Rule::program,"
+        {
+            int zuleide[2][3];
+            string onix;
+        }",
+        Rc::clone(&symbol_table)
+    ).unwrap();
     println!("{}\n", parsed);
-    let ast = ParserCC20211A::factor(parsed.single().unwrap()).unwrap();
-    println!("{:?}", ast)
+    let root = parsed.single().unwrap();
+    println!("{:?}", root.as_rule());
+    let ast = ParserCC20211A::program(root).unwrap();
+    println!("{:?}", symbol_table.borrow());
+    print_tree( &gen_ptree_ast(&mut TreeBuilder::new("AST".to_string()), ast).build()).unwrap();
+
 }
+
+// #[test]
+// fn test_syntax_factor_float() {
+//     let parsed = ParserCC20211A::parse(Rule::factor, "1.66").unwrap();
+//     println!("{}", parsed);
+//     let ast = ParserCC20211A::factor(parsed.single().unwrap()).unwrap();
+//     println!("{:?}", ast)
+// }
+
+// #[test]
+// fn test_syntax_factor_array() {
+//     let parsed = ParserCC20211A::parse(Rule::factor, "inpp[22]").unwrap();
+//     println!("{}\n", parsed);
+//     let ast = ParserCC20211A::factor(parsed.single().unwrap()).unwrap();
+//     println!("{:?}", ast)
+// }
 
 #[test]
 fn test_syntax_expressions() {
-    let parsed = ParserCC20211A::parse(Rule::expression, "2 + 3 + 5").unwrap();
+    let symbol_table = Rc::new(RefCell::new(SymbolTableManager::new()));
+    let parsed = ParserCC20211A::parse_with_userdata(
+        Rule::expression,
+        "2 + 3 + 5",
+        Rc::clone(&symbol_table),
+    )
+    .unwrap();
+    println!("{}", symbol_table.borrow_mut().current_table_id());
     println!("{}\n", parsed);
-    let ast = ParserCC20211A::expression(parsed.single().unwrap()).unwrap();
-    println!("{:?}", ast)
+    // let ast = ParserCC20211A::expression(parsed.single().unwrap()).unwrap();
+    // println!("{:?}", ast)
 }
-
+// pub fn parse_from_program(stbm: SymbolTableManager, pairs: Pairs<Rule>) {
+//     ParserCC20211A::parse_with_userdata();
+//     // Check Children
+//     // pairs.nex
+// }
