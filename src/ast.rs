@@ -1,3 +1,4 @@
+use std::borrow::Borrow;
 use std::cell::RefCell;
 use std::fmt::write;
 use std::fmt::Display;
@@ -309,6 +310,7 @@ pub enum Class {
 //     // expression:
 // }
 // ===================================================================
+#[derive(Clone)]
 pub enum Operation {
     Plus,
     Minus,
@@ -316,8 +318,35 @@ pub enum Operation {
     Div,
     Mod,
     And,
-    Or
+    Or,
+    Gte,
+    Gt,
+    Lte,
+    Lt,
+    Eq,
+    Ne
 }
+impl Display for Operation {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let val = match self {
+            Operation::Plus => "+",
+            Operation::Minus => "-",
+            Operation::Mult => "*",
+            Operation::Div => "/",
+            Operation::Mod => "%",
+            Operation::And => "&&",
+            Operation::Or => "||",
+            Operation::Gte => ">=",
+            Operation::Gt => ">",
+            Operation::Lte => "<=",
+            Operation::Lt => "<",
+            Operation::Eq => "==",
+            Operation::Ne => "!=",
+        };
+        write!(f, "{}", val)
+    }
+}
+#[derive(Clone)]
 pub enum ASTNodeValue {
     Program(Program),
     IntegerLiteral(IntegerLiteral),
@@ -326,7 +355,7 @@ pub enum ASTNodeValue {
     NullLiteral(NullLiteral),
     Identifier(Identifier),
     VariableDeclaration(VariableDeclaration),
-    FuncionDeclaration(FuncionDeclaration),
+    FunctionDeclaration(FunctionDeclaration),
     IfStatement(IfStatement),
     BlockStatement(BlockStatement),
     ReturnStatement(ReturnStatement),
@@ -337,26 +366,41 @@ pub enum ASTNodeValue {
     ExpressionStatement(ExpressionStatement),
     BinaryExpression(BinaryExpression),
     UnaryExpression(UnaryExpression),
-    AssignmentExpression(AssignmentExpression),
+    AssignmentStatement(AssignmentStatement),
     CallExpression(CallExpression),
     NewExpression(NewExpression),
     ElementAccessExpression(ElementAccessExpression)
 }
 
+#[derive(Clone)]
 pub struct IntegerLiteral(pub isize);
+#[derive(Clone)]
 pub struct FloatLiteral(pub f64);
+#[derive(Clone)]
 pub struct StringLiteral(pub String);
+#[derive(Clone)]
 pub struct NullLiteral;
+#[derive(Clone)]
 pub struct Identifier(pub String);
+#[derive(Clone)]
 pub struct VariableDeclaration(pub Identifier, pub Class);
-pub struct FuncionDeclaration(pub Identifier, pub Vec<Identifier>);
+#[derive(Clone)]
+pub struct FunctionDeclaration(pub Identifier, pub Vec<Identifier>);
+#[derive(Clone)]
 pub struct IfStatement(pub BinaryExpression, pub Box<Statement>, pub Option<Box<Statement>>);
+#[derive(Clone)]
 pub struct BlockStatement(pub Vec<Statement>);
+#[derive(Clone)]
 pub struct ReturnStatement;
+#[derive(Clone)]
 pub struct PrintStatement(pub ExpressionStatementValue);
+#[derive(Clone)]
 pub struct ReadStatement(pub ExpressionStatementValue);
-pub struct ForStatement(pub AssignmentExpression, pub Box<BinaryExpression>, pub AssignmentExpression, pub Box<Statement>);
+#[derive(Clone)]
+pub struct ForStatement(pub AssignmentStatement, pub Box<BinaryExpression>, pub AssignmentStatement, pub Box<Statement>);
+#[derive(Clone)]
 pub struct BreakStatement;
+#[derive(Clone)]
 pub enum ExpressionStatementValue {
     Integer(IntegerLiteral),
     Float(FloatLiteral),
@@ -365,18 +409,25 @@ pub enum ExpressionStatementValue {
     Identifier(Identifier),
     Binary(BinaryExpression),
     Unary(UnaryExpression),
-    Assignment(AssignmentExpression),
     Call(CallExpression),
     New(NewExpression),
     ElementAccess(ElementAccessExpression),
 }
+#[derive(Clone)]
 pub struct BinaryExpression(pub Operation, pub Box<ExpressionStatementValue>, pub Box<ExpressionStatementValue>);
+#[derive(Clone)]
 pub struct UnaryExpression(pub Operation, pub Box<ExpressionStatementValue>);
-pub struct AssignmentExpression(pub Box<ExpressionStatementValue>, pub Box<ExpressionStatementValue>);
-pub struct CallExpression(pub Box<ExpressionStatementValue>, pub Vec<Box<ExpressionStatementValue>>);
-pub struct NewExpression(pub Box<ExpressionStatementValue>, pub Class, pub Vec<Box<ExpressionStatementValue>>);
-pub struct ElementAccessExpression(pub Box<ExpressionStatementValue>, pub Vec<Box<ExpressionStatementValue>>);
+#[derive(Clone)]
+pub struct AssignmentStatement(pub Box<ExpressionStatementValue>, pub Box<ExpressionStatementValue>);
+#[derive(Clone)]
+pub struct CallExpression(pub Identifier, pub Vec<Identifier>);
+#[derive(Clone)]
+pub struct NewExpression(pub Class, pub Vec<ExpressionStatementValue>);
+#[derive(Clone)]
+pub struct ElementAccessExpression(pub Box<ExpressionStatementValue>, pub Vec<ExpressionStatementValue>);
+#[derive(Clone)]
 pub struct ExpressionStatement(pub ExpressionStatementValue);
+#[derive(Clone)]
 pub enum Statement {
     If(IfStatement),
     Block(BlockStatement),
@@ -385,10 +436,18 @@ pub enum Statement {
     Read(ReadStatement),
     For(ForStatement),
     Break(BreakStatement),
-    VariableDeclaration(VariableDeclaration)
+    VariableDeclaration(VariableDeclaration),
+    Assignment(AssignmentStatement),
 }
-pub struct Program(pub BlockStatement);
+#[derive(Clone)]
+pub struct Program(pub ProgramValue);
+#[derive(Clone)]
+pub enum ProgramValue {
+    Statement(Statement),
+    FuncList(Vec<FunctionDeclaration>)
+}
 
+#[derive(Clone)]
 pub struct ASTNode<'i> {
     // pub parent: Option<Rc<RefCell<ASTNode<'i>>>>,
     pub value: ASTNodeValue, 
@@ -396,17 +455,53 @@ pub struct ASTNode<'i> {
     pub children: Vec<Rc<RefCell<ASTNode<'i>>>>
 }
 
+pub fn gen_ptree_exp_val(tb: &mut TreeBuilder, expr: ExpressionStatementValue) {
+    match expr {
+        ExpressionStatementValue::Integer(exp) => gen_ptree_ast(tb, ASTNodeValue::IntegerLiteral(exp)),
+        ExpressionStatementValue::Float(exp) => gen_ptree_ast(tb, ASTNodeValue::FloatLiteral(exp)),
+        ExpressionStatementValue::String(exp) => gen_ptree_ast(tb, ASTNodeValue::StringLiteral(exp)),
+        ExpressionStatementValue::Null(exp) => gen_ptree_ast(tb, ASTNodeValue::NullLiteral(exp)),
+        ExpressionStatementValue::Identifier(exp) => gen_ptree_ast(tb, ASTNodeValue::Identifier(exp)),
+        ExpressionStatementValue::Binary(exp) => gen_ptree_ast(tb, ASTNodeValue::BinaryExpression(exp)),
+        ExpressionStatementValue::Unary(exp) => gen_ptree_ast(tb, ASTNodeValue::UnaryExpression(exp)),
+        ExpressionStatementValue::Call(exp) => gen_ptree_ast(tb, ASTNodeValue::CallExpression(exp)),
+        ExpressionStatementValue::New(exp) => gen_ptree_ast(tb, ASTNodeValue::NewExpression(exp)),
+        ExpressionStatementValue::ElementAccess(exp) => gen_ptree_ast(tb, ASTNodeValue::ElementAccessExpression(exp)),
+    };
+}
+
 pub fn gen_ptree_ast(tb: &mut TreeBuilder, node: ASTNodeValue) -> &mut TreeBuilder {
     match node {
-        ASTNodeValue::Program(Program(block)) => {
+        ASTNodeValue::Program(Program(val)) => {
             tb.begin_child("Program".to_string());
-            gen_ptree_ast(tb, ASTNodeValue::BlockStatement(block));
+            match val {
+                ProgramValue::Statement(statement) => match statement {
+                    Statement::If(stmt) => gen_ptree_ast(tb, ASTNodeValue::IfStatement(stmt)),
+                    Statement::Block(stmt) => gen_ptree_ast(tb, ASTNodeValue::BlockStatement(stmt)),
+                    Statement::Return(stmt) => gen_ptree_ast(tb, ASTNodeValue::ReturnStatement(stmt)),
+                    Statement::Print(stmt) => gen_ptree_ast(tb, ASTNodeValue::PrintStatement(stmt)),
+                    Statement::Read(stmt) => gen_ptree_ast(tb, ASTNodeValue::ReadStatement(stmt)),
+                    Statement::For(stmt) => gen_ptree_ast(tb, ASTNodeValue::ForStatement(stmt)),
+                    Statement::Break(stmt) => gen_ptree_ast(tb, ASTNodeValue::BreakStatement(stmt)),
+                    Statement::VariableDeclaration(stmt) => gen_ptree_ast(tb, ASTNodeValue::VariableDeclaration(stmt)),
+                    Statement::Assignment(stmt) => gen_ptree_ast(tb, ASTNodeValue::AssignmentStatement(stmt)),
+                },
+                ProgramValue::FuncList(_) => tb
+            };
             tb.end_child()
         },
-        ASTNodeValue::IntegerLiteral(_) => todo!(),
-        ASTNodeValue::StringLiteral(_) => todo!(),
-        ASTNodeValue::FloatLiteral(_) => todo!(),
-        ASTNodeValue::NullLiteral(_) => todo!(),
+        ASTNodeValue::IntegerLiteral(IntegerLiteral(val)) => {
+            tb.add_empty_child(format!("IntegerLiteral('{}')", val))
+        },
+        ASTNodeValue::StringLiteral(StringLiteral(val)) => {
+            tb.add_empty_child(format!("StringLiteral('{}')", val))
+        },
+        ASTNodeValue::FloatLiteral(FloatLiteral(val)) => {
+            tb.add_empty_child(format!("FloatLiteral('{}')", val))
+        },
+        ASTNodeValue::NullLiteral(NullLiteral) => {
+            tb.add_empty_child(format!("NullLiteral"))
+        },
         ASTNodeValue::Identifier(Identifier(name)) => {
             tb.add_empty_child(format!("Identifier('{}')", name))
         },
@@ -416,7 +511,7 @@ pub fn gen_ptree_ast(tb: &mut TreeBuilder, node: ASTNodeValue) -> &mut TreeBuild
             gen_ptree_ast(tb, ASTNodeValue::Identifier(id));
             tb.end_child()
         },
-        ASTNodeValue::FuncionDeclaration(_) => todo!(),
+        ASTNodeValue::FunctionDeclaration(_) => todo!(),
         ASTNodeValue::IfStatement(_) => todo!(),
         ASTNodeValue::BlockStatement(BlockStatement(statements)) => {
             tb.begin_child("BlockStatement".to_string());
@@ -430,6 +525,7 @@ pub fn gen_ptree_ast(tb: &mut TreeBuilder, node: ASTNodeValue) -> &mut TreeBuild
                     Statement::For(stmt) => gen_ptree_ast(tb, ASTNodeValue::ForStatement(stmt)),
                     Statement::Break(stmt) => gen_ptree_ast(tb, ASTNodeValue::BreakStatement(stmt)),
                     Statement::VariableDeclaration(stmt) => gen_ptree_ast(tb, ASTNodeValue::VariableDeclaration(stmt)),
+                    Statement::Assignment(stmt) => gen_ptree_ast(tb, ASTNodeValue::AssignmentStatement(stmt)),
                 };
             }
             tb.end_child()
@@ -439,12 +535,38 @@ pub fn gen_ptree_ast(tb: &mut TreeBuilder, node: ASTNodeValue) -> &mut TreeBuild
         ASTNodeValue::ReadStatement(_) => todo!(),
         ASTNodeValue::ForStatement(_) => todo!(),
         ASTNodeValue::BreakStatement(_) => todo!(),
-        ASTNodeValue::ExpressionStatement(_) => todo!(),
-        ASTNodeValue::BinaryExpression(_) => todo!(),
-        ASTNodeValue::UnaryExpression(_) => todo!(),
-        ASTNodeValue::AssignmentExpression(_) => todo!(),
+        ASTNodeValue::ExpressionStatement(ExpressionStatement(expr)) => {
+            tb.begin_child("ExpressionStatement".to_string());
+            gen_ptree_exp_val(tb, expr);
+            tb.end_child()
+        },
+        ASTNodeValue::BinaryExpression(BinaryExpression(op, left, right)) => {
+            tb.begin_child(format!("BinaryExpression('{}')", op));
+            gen_ptree_exp_val(tb,*left.clone());
+            gen_ptree_exp_val(tb, *right.clone());
+            tb.end_child()
+        },
+        ASTNodeValue::UnaryExpression(UnaryExpression(op, exp)) => {
+            tb.begin_child(format!("UnaryExpression('{}')", op));
+            gen_ptree_exp_val(tb,*exp.clone());
+            tb.end_child()
+        },
+        ASTNodeValue::AssignmentStatement(AssignmentStatement(lval, exp)) => {
+            tb.begin_child("AssignmentStatement".to_string());
+            gen_ptree_exp_val(tb,*lval.clone());
+            gen_ptree_exp_val(tb, *exp.clone());
+            tb.end_child()
+        },
         ASTNodeValue::CallExpression(_) => todo!(),
         ASTNodeValue::NewExpression(_) => todo!(),
-        ASTNodeValue::ElementAccessExpression(_) => todo!(),
+        ASTNodeValue::ElementAccessExpression(ElementAccessExpression(val, idxs)) => {
+            tb.begin_child("ElementAccessExpression".to_string());
+            gen_ptree_exp_val(tb,*val.clone());
+            tb.begin_child("Indexes".to_string());
+            for idx in idxs {
+                gen_ptree_exp_val(tb, idx);
+            }
+            tb.end_child()
+        },
     }
 }

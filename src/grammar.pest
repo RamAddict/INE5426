@@ -87,7 +87,7 @@ funcdef = {
     (kw_def ~ ident ~ kw_paren_open ~ kw_paren_close ~ kw_cur_bracket_open ~ statelist ~ kw_cur_bracket_close)
 }
 
-paramlist = {((class_type ~ ident ~ kw_comma ~ paramlist) | ((kw_int | kw_float | kw_string) ~ ident))}
+paramlist = {((class_type ~ ident ~ kw_comma ~ paramlist) | ((class_type) ~ ident))}
 
 statement = {
     vardecl ~ kw_semicolon |
@@ -168,7 +168,7 @@ term_mult_div_mod = {
     ((mult_div_mod_op) ~ unaryexpr)
 }
 
-unaryexpr = { (kw_plus | kw_minus)  ~ factor | factor }
+unaryexpr = { sum_sub_op  ~ factor | factor }
 
 factor = { float_constant | int_constant | string_constant | kw_null | lvalue | (kw_paren_open ~ numexpression ~ kw_paren_close) }
 
