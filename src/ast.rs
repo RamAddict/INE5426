@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+#![allow(unused_imports)]
 use std::borrow::Borrow;
 use std::cell::RefCell;
 use std::fmt::write;
@@ -317,8 +319,6 @@ pub enum Operation {
     Mult,
     Div,
     Mod,
-    And,
-    Or,
     Gte,
     Gt,
     Lte,
@@ -334,8 +334,6 @@ impl Display for Operation {
             Operation::Mult => "*",
             Operation::Div => "/",
             Operation::Mod => "%",
-            Operation::And => "&&",
-            Operation::Or => "||",
             Operation::Gte => ">=",
             Operation::Gt => ">",
             Operation::Lte => "<=",
@@ -355,6 +353,7 @@ pub enum ASTNodeValue {
     NullLiteral(NullLiteral),
     Identifier(Identifier),
     VariableDeclaration(VariableDeclaration),
+    #[allow(dead_code)]
     FunctionDeclaration(FunctionDeclaration),
     IfStatement(IfStatement),
     BlockStatement(BlockStatement),
@@ -363,6 +362,7 @@ pub enum ASTNodeValue {
     ReadStatement(ReadStatement),
     ForStatement(ForStatement),
     BreakStatement(BreakStatement),
+    #[allow(dead_code)]
     ExpressionStatement(ExpressionStatement),
     BinaryExpression(BinaryExpression),
     UnaryExpression(UnaryExpression),
@@ -409,6 +409,7 @@ pub enum ExpressionStatementValue {
     Identifier(Identifier),
     Binary(BinaryExpression),
     Unary(UnaryExpression),
+    #[allow(dead_code)]
     Call(CallExpression),
     New(NewExpression),
     ElementAccess(ElementAccessExpression),
@@ -429,11 +430,15 @@ pub struct ElementAccessExpression(pub Box<ExpressionStatementValue>, pub Vec<Ex
 pub struct ExpressionStatement(pub ExpressionStatementValue);
 #[derive(Clone)]
 pub enum Statement {
+    #[allow(dead_code)]
     If(IfStatement),
     Block(BlockStatement),
     Return(ReturnStatement),
+    #[allow(dead_code)]
     Print(PrintStatement),
+    #[allow(dead_code)]
     Read(ReadStatement),
+    #[allow(dead_code)]
     For(ForStatement),
     Break(BreakStatement),
     VariableDeclaration(VariableDeclaration),
@@ -444,6 +449,7 @@ pub struct Program(pub ProgramValue);
 #[derive(Clone)]
 pub enum ProgramValue {
     Statement(Statement),
+    #[allow(dead_code)]
     FuncList(Vec<FunctionDeclaration>)
 }
 

@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+#![allow(unused_imports)]
 use std::{borrow::{Borrow, BorrowMut}, cell::{Ref, RefCell, RefMut}, collections::HashMap, num::NonZeroU32, os::unix::process::parent_id, rc::{Rc, Weak}};
 
 use crate::ast::Class;
@@ -12,7 +14,7 @@ pub struct Symbol {
     pub attributes: SymbolAttributes,
 }
 #[derive(Debug, Clone)]
-struct SymbolTable {
+pub struct SymbolTable {
     parent: Option<SymbolTableId>,
     symbols: HashMap<String, Symbol>,
     scopes: Vec<SymbolTableId>,
@@ -45,9 +47,9 @@ impl SymbolTableManager {
             tables: vec![global_table]
         }
     }
-    pub fn current_table_id(&mut self) -> usize {
-        self.current_table_id.0
-    }
+    // pub fn current_table_id(&mut self) -> usize {
+    //     self.current_table_id.0
+    // }
 
     pub fn current_table_mut(&mut self) -> &mut SymbolTable {
         self.tables.get_mut(self.current_table_id.0).unwrap()

@@ -1,15 +1,18 @@
 // Import External Modules
 extern crate pest;
-#[macro_use]
-extern crate pest_derive;
-use std::{env, fs, path::PathBuf, time::Instant};
+use std::{cell::RefCell, env, fs, path::PathBuf, rc::Rc, time::Instant};
 
 use comfy_table::{Cell, Color, Table, presets::{UTF8_FULL, UTF8_HORIZONTAL_BORDERS_ONLY}, Attribute, CellAlignment};
-use pest::Parser;
-
+use consumer::ParserCC20211A;
+use pest::Parser as CParser;
+use pest_consume::Parser;
 use clap::{AppSettings, Clap};
+use ptree::{TreeBuilder, print_tree};
+use stb::SymbolTableManager;
 use symbols_table::SymbolsTable;
 use token_list::TokenList;
+
+use crate::ast::gen_ptree_ast;
 // Import Internal Modules
 #[cfg(test)]
 mod test;
@@ -47,7 +50,12 @@ enum CLISubcommands {
     #[clap(name = "syntax")]
     #[clap(about = "Do a syntax analysis using the CC20211 lang")]
     #[clap(setting = AppSettings::ColoredHelp)]
-    Syntax(CLICommandSyntax)
+    Syntax(CLICommandSyntax),
+    #[clap(version = "v0.0.1")]
+    #[clap(name = "semantic")]
+    #[clap(about = "Do a semantic analysis using the CC20211 lang - WIP")]
+    #[clap(setting = AppSettings::ColoredHelp)]
+    Semantic(CLICommandSemantic)
 }
 
 #[derive(Clap)]
@@ -177,6 +185,41 @@ fn main() {
                             .add_row(vec![Cell::new("Status").add_attribute(Attribute::Bold), Cell::new("Success").fg(Color::Green).add_attribute(Attribute::Bold).set_alignment(CellAlignment::Center)])
                             .add_row(vec![Cell::new("Elapsed Time:"), Cell::new(format!("{:.3}s", elapsed_time.as_secs_f64())).set_alignment(CellAlignment::Right)]);
                         println!("{}", info_table);
+                    }
+                }
+                Err(error) => {
+                    // println!("{:?}", error);
+                    println!("{}", error);
+                }
+            }
+        }
+        CLISubcommands::Semantic(semantic_options) => {
+            // Read File
+            let file_content = read_file_content(semantic_options.input.as_str())
+                .expect("Ops. Something occured while reading your file");
+            // Try Parse Program
+            let parsing_timing = Instant::now();
+            // Define Symbols Table
+            let symbol_table = Rc::new(RefCell::new(SymbolTableManager::new()));
+            match ParserCC20211A::parse_with_userdata(crate::consumer::Rule::program, &file_content, Rc::clone(&symbol_table)) {
+                Ok(pairs) => {
+                    // Parse Semantic
+                    let root = pairs.single().unwrap();
+                    let ast = ParserCC20211A::program(root).unwrap();
+                    // Success Parsed
+                    let elapsed_time = parsing_timing.elapsed();
+                    println!("Symbol Table\n{:#?}", symbol_table.borrow());
+                    println!("AST:");
+                    print_tree( &gen_ptree_ast(&mut TreeBuilder::new("AST".to_string()), ast).build()).unwrap();
+                    if semantic_options.show_info {
+                        let mut info_table = Table::new();
+                            info_table
+                                .apply_modifier(UTF8_FULL)
+                                .set_content_arrangement(comfy_table::ContentArrangement::Dynamic)
+                                .set_header(vec![Cell::new("Statistics").fg(Color::Yellow).add_attribute(Attribute::Bold), Cell::new("")])
+                                .add_row(vec![Cell::new("Status").add_attribute(Attribute::Bold), Cell::new("Success").fg(Color::Green).add_attribute(Attribute::Bold).set_alignment(CellAlignment::Center)])
+                                .add_row(vec![Cell::new("Elapsed Time:"), Cell::new(format!("{:.3}s", elapsed_time.as_secs_f64())).set_alignment(CellAlignment::Right)]);
+                            println!("{}", info_table);
                     }
                 }
                 Err(error) => {

@@ -1,5 +1,4 @@
 use std::cell::RefCell;
-use std::fmt::Binary;
 use std::rc::Rc;
 
 // Import Dependencies
@@ -9,7 +8,9 @@ use std::rc::Rc;
 use pest::error::ErrorVariant;
 use pest_consume::Error;
 use pest_consume::Parser;
+#[allow(unused_imports)]
 use ptree::TreeBuilder;
+#[allow(unused_imports)]
 use ptree::print_tree;
 
 // use crate::ast::ASTNode;
@@ -23,14 +24,14 @@ use crate::ast::Class;
 use crate::ast::ElementAccessExpression;
 use crate::ast::ExpressionStatementValue;
 use crate::ast::FloatLiteral;
-use crate::ast::FunctionDeclaration;
+// use crate::ast::FunctionDeclaration;
 use crate::ast::Identifier;
 use crate::ast::InnerClass;
 use crate::ast::IntegerLiteral;
 use crate::ast::NewExpression;
 use crate::ast::NullLiteral;
 use crate::ast::Operation;
-use crate::ast::PrintStatement;
+// use crate::ast::PrintStatement;
 use crate::ast::Program;
 use crate::ast::ProgramValue;
 use crate::ast::ReturnStatement;
@@ -38,6 +39,7 @@ use crate::ast::Statement;
 use crate::ast::StringLiteral;
 use crate::ast::UnaryExpression;
 use crate::ast::VariableDeclaration;
+#[allow(unused_imports)]
 use crate::ast::gen_ptree_ast;
 use crate::stb::Symbol;
 use crate::stb::SymbolAttributes;
@@ -50,7 +52,7 @@ type Node<'i> = pest_consume::Node<'i, Rule, Rc<RefCell<SymbolTableManager>>>;
 // Define Structs
 #[derive(Parser)]
 #[grammar = "grammar.pest"]
-struct ParserCC20211A;
+pub struct ParserCC20211A;
 // // Define Consumer
 #[pest_consume::parser]
 impl ParserCC20211A {
@@ -91,7 +93,7 @@ impl ParserCC20211A {
     //     }
     // }
 
-    fn program(input: Node) -> Result<ASTNodeValue> {
+    pub fn program(input: Node) -> Result<ASTNodeValue> {
         // Parse Children
         let mut children = input.children();
         let child = children.next().unwrap();
@@ -199,6 +201,7 @@ impl ParserCC20211A {
             None => Class::Simple(inner_class)
         };
         // Insert Into Symbol Table
+        #[allow(unused_assignments)]
         let mut result: Option<std::result::Result<_, crate::stb::Error>> = None;
         {
             let mut symbol_table = input.user_data().borrow_mut();
@@ -375,9 +378,8 @@ impl ParserCC20211A {
         if let Some(idx_tail) = children.next() {
             // Indexing Identifier
             // Check Type
-            let mut attributes: Option<SymbolAttributes> = None;
-            let mut symbol_table = input.user_data().clone();
-            attributes = Some(symbol_table.borrow_mut().lookup_mut(&ident.0).unwrap().attributes.clone());
+            let symbol_table = input.user_data().clone();
+            let attributes = Some(symbol_table.borrow_mut().lookup_mut(&ident.0).unwrap().attributes.clone());
             match attributes {
                 Some(SymbolAttributes::Identifier(class)) => { 
                     match class {
@@ -575,20 +577,20 @@ fn test_syntax_attribstat() {
 //     println!("{:?}", ast)
 // }
 
-#[test]
-fn test_syntax_expressions() {
-    let symbol_table = Rc::new(RefCell::new(SymbolTableManager::new()));
-    let parsed = ParserCC20211A::parse_with_userdata(
-        Rule::expression,
-        "2 + 3 + 5",
-        Rc::clone(&symbol_table),
-    )
-    .unwrap();
-    println!("{}", symbol_table.borrow_mut().current_table_id());
-    println!("{}\n", parsed);
+// #[test]
+// fn test_syntax_expressions() {
+//     let symbol_table = Rc::new(RefCell::new(SymbolTableManager::new()));
+//     let parsed = ParserCC20211A::parse_with_userdata(
+//         Rule::expression,
+//         "2 + 3 + 5",
+//         Rc::clone(&symbol_table),
+//     )
+//     .unwrap();
+//     println!("{}", symbol_table.borrow_mut().current_table_id());
+//     println!("{}\n", parsed);
     // let ast = ParserCC20211A::expression(parsed.single().unwrap()).unwrap();
     // println!("{:?}", ast)
-}
+// }
 // pub fn parse_from_program(stbm: SymbolTableManager, pairs: Pairs<Rule>) {
 //     ParserCC20211A::parse_with_userdata();
 //     // Check Children
