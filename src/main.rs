@@ -205,21 +205,38 @@ fn main() {
                 Ok(pairs) => {
                     // Parse Semantic
                     let root = pairs.single().unwrap();
-                    let ast = ParserCC20211A::program(root).unwrap();
-                    // Success Parsed
-                    let elapsed_time = parsing_timing.elapsed();
-                    println!("Symbol Table\n{:#?}", symbol_table.borrow());
-                    println!("AST:");
-                    print_tree( &gen_ptree_ast(&mut TreeBuilder::new("AST".to_string()), ast).build()).unwrap();
-                    if semantic_options.show_info {
-                        let mut info_table = Table::new();
-                            info_table
-                                .apply_modifier(UTF8_FULL)
-                                .set_content_arrangement(comfy_table::ContentArrangement::Dynamic)
-                                .set_header(vec![Cell::new("Statistics").fg(Color::Yellow).add_attribute(Attribute::Bold), Cell::new("")])
-                                .add_row(vec![Cell::new("Status").add_attribute(Attribute::Bold), Cell::new("Success").fg(Color::Green).add_attribute(Attribute::Bold).set_alignment(CellAlignment::Center)])
-                                .add_row(vec![Cell::new("Elapsed Time:"), Cell::new(format!("{:.3}s", elapsed_time.as_secs_f64())).set_alignment(CellAlignment::Right)]);
-                            println!("{}", info_table);
+                    if let Ok(ast) = ParserCC20211A::program(root) {
+                        // Success Parsed
+                        let elapsed_time = parsing_timing.elapsed();
+                        println!("Symbol Table\n{:#?}", symbol_table.borrow());
+                        println!("AST:");
+                        print_tree( &gen_ptree_ast(&mut TreeBuilder::new("AST".to_string()), ast).build()).unwrap();
+                        if semantic_options.show_info {
+                            let mut info_table = Table::new();
+                                info_table
+                                    .apply_modifier(UTF8_FULL)
+                                    .set_content_arrangement(comfy_table::ContentArrangement::Dynamic)
+                                    .set_header(vec![Cell::new("Statistics").fg(Color::Yellow).add_attribute(Attribute::Bold), Cell::new("")])
+                                    .add_row(vec![Cell::new("Status").add_attribute(Attribute::Bold), Cell::new("Success").fg(Color::Green).add_attribute(Attribute::Bold).set_alignment(CellAlignment::Center)])
+                                    .add_row(vec![Cell::new("Elapsed Time:"), Cell::new(format!("{:.3}s", elapsed_time.as_secs_f64())).set_alignment(CellAlignment::Right)]);
+                                println!("{}", info_table);
+                        }
+                    } else {
+                        // Success Parsed
+                        let elapsed_time = parsing_timing.elapsed();
+                        println!("Symbol Table\n{:#?}", symbol_table.borrow());
+                        println!("AST:");
+                        print_tree( &mut TreeBuilder::new("AST".to_string()).build()).unwrap();
+                        if semantic_options.show_info {
+                            let mut info_table = Table::new();
+                                info_table
+                                    .apply_modifier(UTF8_FULL)
+                                    .set_content_arrangement(comfy_table::ContentArrangement::Dynamic)
+                                    .set_header(vec![Cell::new("Statistics").fg(Color::Yellow).add_attribute(Attribute::Bold), Cell::new("")])
+                                    .add_row(vec![Cell::new("Status").add_attribute(Attribute::Bold), Cell::new("Success").fg(Color::Green).add_attribute(Attribute::Bold).set_alignment(CellAlignment::Center)])
+                                    .add_row(vec![Cell::new("Elapsed Time:"), Cell::new(format!("{:.3}s", elapsed_time.as_secs_f64())).set_alignment(CellAlignment::Right)]);
+                                println!("{}", info_table);
+                        }
                     }
                 }
                 Err(error) => {
